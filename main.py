@@ -1,27 +1,51 @@
+from urllib.request import Request, urlopen
 import requests
 from bs4 import BeautifulSoup # scraping XML files
 import json
 import datetime
 
-# params
-# action: (not needed anymore?) By default should be set to getcompany.
-# CIK: (required) Is the CIK number of the company you are searching.
-# type: (optional) Allows filtering the type of form. For example, if set to 10-k only the 10-K filings are returned.
-# dateb: (optional) Will only return the filings before a given date. The format is as follows YYYYMMDD
-# owner: (required) Is set to exclude by default and specifies ownership. You may also set it to include and only.
-# start: (optional) Is the starting index of the results. For example, if I have 100 results but want to start at 45 of 100, I would pass 45.
-# state: (optional) The company's state.
-# filenum: (optional) The filing number.
-# sic: (optional) The company's SIC (Standard Industry Classification) identifier
-# output: (optional) Defines returned data structure as either xml (atom) or normal html.
-# count: (optional) The number of results you want to see with your request, the max is 100 and if not set it will default to 40.
+# Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36
 
-# endpoint = r"https://www.sec.gov/cgi-bin/browse-edgar"
-# param_dict = {'CIK':'0001318605',
-#               'type':'10-k',
-#               }
+try:
+  CIK = '0001318605' # TSLA's identifier
+  url = f'https://data.sec.gov/submissions/CIK{CIK}.json'
+  header = {'User-Agent': 'Mozilla/5.0'}
+  response = requests.get(url, headers=header)
+  data = json.loads(response.text)
 
-url = 'https://data.sec.gov/submissions/CIK0001318605.json'
-response = requests.get(url)
-data = json.loads(response.text)
-print(data)
+  # print(len(data))
+  # for bleh in data['filings']['recent']:
+  #   print(bleh)
+
+  first10k = 0
+  for eck in data['filings']['recent']['primaryDocDescription']:
+    if "10-K" in eck:
+      break
+    first10k += 1
+
+  # url of first 10-k instance in form of date (.htm)
+  file10k = data['filings']['recent']['primaryDocument'][first10k]
+  # filer ID
+  acc = data['filings']['recent']['accessionNumber'][first10k]
+  acc = acc.replace("-", "")
+
+  # print(acc)
+  # print(file10k)
+  # print(len(data['filings']['recent']['primaryDocDescription']))
+  # print(len(data['filings']['recent']['primaryDocument']))
+
+  url10k = f"https://www.sec.gov/Archives/edgar/data/{CIK}/{acc}/{file10k}"
+  # url10k = "https://www.sec.gov/Archives/edgar/data/0001318605/000095017023001409/tsla-20221231.htm"
+  # req = Request(url10k, headers=header)
+  # urlopen(req)
+  print(url10k)
+
+
+  # PARAMS to consider:
+  # CIK -> company ID
+  # link format -> htm, xsd, _cal.xml . . . htm is most consistent
+  # filing -> 10-k 8-k, etc.
+
+  # return url10k
+except Exception as e:
+  print(f'Error {e} has occured')
