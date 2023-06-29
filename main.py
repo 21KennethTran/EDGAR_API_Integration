@@ -5,10 +5,12 @@ import json
 import pandas as pd
 import datetime
 
+from getfiles import ContainsKeyWords
+
 # Showcase functions: get latest filing of company,
 # print Y/N info onto Google Sheets given some parameters using web scraper
 
-# Edgar API (< 10 calls / second), RSS feed, Yahoo/Google finance API, Google sheet API
+# Edgar API (< 10 calls / second), RSS feed, Yahoo finance API, Google sheet API
 # PARAMS:
 #CMP: company market capitalization
 #DocType: document type
@@ -21,10 +23,27 @@ try:
   header = {'User-Agent': 'kenpt03@gmail.com'}
   response = requests.get( url, headers=header)
   # print(response.json()['0'])
+  data = response.json()
+  my_dict = {}
 
-  parseCIK = response.json()['0']['cik_str']
+  # json holds mappings of key value pairs, have to use .items()
+  for key, comp in data.items():
+    my_dict[comp['ticker']] = comp['cik_str']
+  # print(my_dict)
 
-  # unfiltered dataframe with filled CIKs
+  finviz = 'https://finviz.com/screener.ashx?v=111&f=cap_nano,sh_avgvol_u50&ft=4'
+  matched = requests.get(finviz, headers=header)
+  soup = BeautifulSoup(matched.content, 'html.parser')
+  contents = soup.find_all('td', height="10", align="left")
+
+  for content in contents[::5]:
+    ticker = content.text
+    # print(my_dict[ticker])
+    print(ticker)
+    docurl = f'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={my_dict[ticker]}&type=s-3%25&dateb=&owner=exclude&start=0&count=100&output=atom'
+    ContainsKeyWords(docurl)
+
+
   data = pd.DataFrame.from_dict(response.json(), orient='index')
   data['cik_str'] = data['cik_str'].astype(str).str.zfill(10)
 
@@ -33,8 +52,14 @@ try:
   filingdata = requests.get(url2, headers=header)
 
 
-  print(data)
+  # print(data)
 
-  # use finviz....
+  # parse through these pages using tickers from edgar, then print out to sheets
+  # use Google sheet API
+  # https://finviz.com/screener.ashx?v=111&f=cap_nano,sh_avgvol_u50&ft=4
+
+
+  # for later use:
+  # https://github.com/mcdallas/wallstreet
 except Exception as e:
   print(f'Error {e} has occured')

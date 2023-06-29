@@ -50,7 +50,7 @@ def getCompanyFilings(cik="0001318605", format=".xml", filing="10-K"):
 # url: string url of all specified filings of a company from edgar
 # words: array of strings of key words that must be found in the first filing of this document type
 #RETURN: T/F if key words are found in file\\drive\\1VM9vVpf5zItbskcyQUB0CPfIoYuLgnfP
-def ContainsKeyWords(url="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320193&type=s-3%25&dateb=&owner=exclude&start=0&count=10&output=atom", words=["Common Shares", "Preferred Shares", "Warrants"]):
+def ContainsKeyWords(url="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320193&type=s-3%25&dateb=&owner=exclude&start=0&count=100&output=atom", words=["Common Shares", "Preferred Shares", "Warrants"]):
   try:
     header = {'User-Agent': 'kenpt03@gmail.com'}
     while url is not None:
@@ -62,7 +62,9 @@ def ContainsKeyWords(url="https://www.sec.gov/cgi-bin/browse-edgar?action=getcom
         break
       url = links[0]['href']
 
-
+    if len(soup.find_all('entry')) == 0:
+      print("no file")
+      return
     ent = soup.find_all('entry')[-1].find('filing-href').text
 
     href = requests.get(ent, headers=header)
@@ -77,31 +79,15 @@ def ContainsKeyWords(url="https://www.sec.gov/cgi-bin/browse-edgar?action=getcom
     keyfound = True
     content = parser.text
     for word in words:
-      print(word)
+      # print(word)
       if word not in content:
         keyfound = False
         break
-    
+
     if keyfound:
       print("Yes")
     else:
       print("No")
-
-    # soup3 = BeautifulSoup(parser.content, 'html.parser')
-    # # key = soup3.find_all('page')[-1]
-    # # print(key)
-
-    # for word in words:
-    #   print(word)
-    #   key = soup3.find_all('body', text=lambda t: t and word in t)
-    #   print(key)
-    #   if key is None:
-    #     keyfound = False
-
-    # if keyfound:
-    #   print("Yes")
-    # else:
-    #   print("No")
 
   except Exception as e:
     print(f'Error {e} has occurred')
