@@ -62,6 +62,10 @@ def ContainsKeyWords(url="https://www.sec.gov/cgi-bin/browse-edgar?action=getcom
         break
       url = links[0]['href']
 
+    # response = requests.get(url, headers=header)
+    # soup = BeautifulSoup(response.content, 'xml')
+
+    
     if len(soup.find_all('entry')) == 0:
       print("no file")
       return

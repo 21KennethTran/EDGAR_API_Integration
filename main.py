@@ -44,12 +44,12 @@ try:
     ContainsKeyWords(docurl)
 
 
-  data = pd.DataFrame.from_dict(response.json(), orient='index')
-  data['cik_str'] = data['cik_str'].astype(str).str.zfill(10)
+#   data = pd.DataFrame.from_dict(response.json(), orient='index')
+#   data['cik_str'] = data['cik_str'].astype(str).str.zfill(10)
 
-  samplecik = data[0:1].cik_str[0]
-  url2 = f'https://data.sec.gov/submissions/CIK{samplecik}.json'
-  filingdata = requests.get(url2, headers=header)
+#   samplecik = data[0:1].cik_str[0]
+#   url2 = f'https://data.sec.gov/submissions/CIK{samplecik}.json'
+#   filingdata = requests.get(url2, headers=header)
 
 
   # print(data)
