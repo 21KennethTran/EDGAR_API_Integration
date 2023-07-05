@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import pandas as pd
-import datetime
+import time
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 
@@ -38,6 +38,19 @@ try:
     soup = BeautifulSoup(matched.content, 'html.parser')
     contents = soup.find_all('td', height="10", align="left")
 
+    page = soup.find_all('a', class_="tab-link is-next")
+
+    while len(page) != 0:
+        link = page[0]['href']
+        finviz = f'https://finviz.com/{link}'
+        matched = requests.get(finviz, headers=header)
+        soup = BeautifulSoup(matched.content, 'html.parser')
+        new = soup.find_all('td', height="10", align="left")
+        contents.extend(new)
+        page = soup.find_all('a', class_="tab-link is-next")
+
+    # print(contents)
+
     # connect to GoogleSheets
     scopes = [
     'https://www.googleapis.com/auth/spreadsheets',
@@ -51,15 +64,24 @@ try:
 
     sheet.update('A1:C1', [['Company Ticker', 'S-3 File', 'Key Words']])
     row = 2
+    # write requests per minuter per user: 60 // I will keep it safe at 45
+    write = 1
 
     for content in contents[::5]:
         ticker = content.text
         # print(my_dict[ticker])
         print(ticker)
-        docurl = f'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={my_dict[ticker]}&type=s-3%25&dateb=&owner=exclude&start=0&count=100&output=atom'
-        content = ContainsKeyWords(docurl)
-        sheet.update(f'A{row}:C{row}', [[ticker, content[0], content[1]]])
+        if ticker in my_dict:
+            docurl = f'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={my_dict[ticker]}&type=s-3%25&dateb=&owner=exclude&start=0&count=100&output=atom'
+            content = ContainsKeyWords(docurl)
+            sheet.update(f'A{row}:C{row}', [[ticker, content[0], content[1]]])
+        else:
+            sheet.update(f'A{row}:C{row}', [[ticker, 'Not Registered', 'No']])
         row += 1
+        write += 1
+        if write == 45:
+            write = 0
+            time.sleep(64)
 
 
     #   data = pd.DataFrame.from_dict(response.json(), orient='index')
