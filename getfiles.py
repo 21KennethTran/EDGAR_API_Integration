@@ -15,7 +15,7 @@ import datetime
 
 def getCompanyFilings(cik="0001318605", format=".xml", filing="10-K"):
     try:
-        url = f'https://data.sec.gov/submissions/CIK{CIK}.json'
+        url = f'https://data.sec.gov/submissions/CIK{cik}.json'
         header = {'User-Agent': 'kenpt03@gmail.com'}
         response = requests.get(url, headers=header)
         data = json.loads(response.text)
@@ -24,20 +24,20 @@ def getCompanyFilings(cik="0001318605", format=".xml", filing="10-K"):
         for eck in data['filings']['recent']['primaryDocDescription']:
             if filing in eck:
                 break
-        first += 1
+            first += 1
 
         # url of first filing instance in form of date (.htm)
         file10k = data['filings']['recent']['primaryDocument'][first]
-        # filer ID
+
         acc = data['filings']['recent']['accessionNumber'][first]
         acc = acc.replace("-", "")
 
-        url10k = f"https://www.sec.gov/Archives/edgar/data/{CIK}/{acc}/{file10k}"
+        url10k = f"https://www.sec.gov/Archives/edgar/data/{cik}/{acc}/{file10k}"
         print(url10k)
 
         # print xml version of report
         file10kxml = file10k.replace(".","_") + format
-        urlf = f"https://www.sec.gov/Archives/edgar/data/{CIK}/{acc}/{file10kxml}"
+        urlf = f"https://www.sec.gov/Archives/edgar/data/{cik}/{acc}/{file10kxml}"
         return urlf
     except Exception as e:
         print(f'Error {e} has occured')
@@ -104,4 +104,4 @@ def ContainsKeyWords(url="https://www.sec.gov/cgi-bin/browse-edgar?action=getcom
         print(f'Error {e} has occurred')
 
 
-ContainsKeyWords()
+getCompanyFilings()
